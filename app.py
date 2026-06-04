@@ -10,7 +10,8 @@ st.set_page_config(page_title="Sentimen Analisis LSTM", page_icon="📊", layout
 # Fungsi pemuatan model dalam cache
 @st.cache_resource
 def load_model_data():
-    model = tf.keras.models.load_model('model_lstm.h5')
+    # Di dalam fungsi load_model_data()
+    model = tf.keras.models.load_model('model_lstm.keras')
     with open('tokenizer.pickle', 'rb') as handle:
         tokenizer = pickle.load(handle)
     return model, tokenizer
