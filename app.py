@@ -18,6 +18,10 @@ def load_resources():
         tf.keras.layers.Dense(1, activation='sigmoid', name="dense_layer")
     ])
     
+    # ---> TAMBAHKAN BARIS INI UNTUK MENGATASI ERROR "NOT YET BUILT" <---
+    # Memaksa model menginisiasi memori dengan ekspektasi panjang teks = 50
+    model.build(input_shape=(None, 50)) 
+    
     # Memuat bobot murni lewat framework biner resmi
     model.load_weights('model_lstm_fixed.weights.h5')
         
