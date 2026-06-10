@@ -30,11 +30,12 @@ padded = pad_sequences(sequences, maxlen=max_length, padding='post', truncating=
 X_train, X_test, y_train, y_test = train_test_split(padded, labels, test_size=0.2, random_state=42)
 
 # 5. Arsitektur Model (Sama persis dengan struktur di app.py)
+# --- UPDATE LANGKAH 5 PADA TRAIN.PY ---
 model = Sequential([
-    Embedding(vocab_size, embedding_dim, input_length=max_length),
-    LSTM(64),
-    Dropout(0.5),
-    Dense(1, activation='sigmoid')
+    Embedding(vocab_size, embedding_dim, input_length=max_length, name="embed_layer"),
+    LSTM(64, name="lstm_layer"),
+    Dropout(0.5, name="dropout_layer"),
+    Dense(1, activation='sigmoid', name="dense_layer")
 ])
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -43,17 +44,11 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 model.fit(X_train, y_train, epochs=10, validation_split=0.1, verbose=1)
 
 # 7. SIMPAN BOBOT DAN TOKENIZER (Solusi Anti-Error Versi)
-# --- GANTI LANGKAH 7 PADA TRAIN.PY DENGAN KODE INI ---
+# --- UPDATE LANGKAH 7 PADA TRAIN.PY ---
+# Gunakan save_weights format biner Keras dengan nama layer eksplisit
+model.save_weights('model_lstm_fixed.weights.h5')
 
-# Ambil bobot model dalam bentuk NumPy arrays
-weights = model.get_weights()
-
-# Simpan bobot menggunakan pickle (bukan format .h5/.keras)
-with open('model_weights.pickle', 'wb') as f:
-    pickle.dump(weights, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-# Simpan tokenizer (tetap sama)
 with open('tokenizer.pickle', 'wb') as handle:
     pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-print("Sukses: File 'model_weights.pickle' dan 'tokenizer.pickle' telah diperbarui!")
+print("Sukses: File 'model_lstm_fixed.weights.h5' telah dibuat!")

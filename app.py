@@ -7,21 +7,19 @@ import numpy as np
 # 1. Konfigurasi Halaman Utama
 st.set_page_config(page_title="Sentimen Analisis LSTM Streamlit", page_icon="📊", layout="wide")
 
-# 2. Fungsi Load Resource Menggunakan Pickle (Anti-Error Keras Legacy)
+# 2. Fungsi Load Resource yang Selaras
 @st.cache_resource
 def load_resources():
-    # Bangun struktur arsitektur LSTM secara manual
+    # Bangun arsitektur dengan nama layer yang persis sama dengan train.py
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Embedding(input_dim=5000, output_dim=32, input_length=50),
-        tf.keras.layers.LSTM(64),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(1, activation='sigmoid')
+        tf.keras.layers.Embedding(input_dim=5000, output_dim=32, input_length=50, name="embed_layer"),
+        tf.keras.layers.LSTM(64, name="lstm_layer"),
+        tf.keras.layers.Dropout(0.5, name="dropout_layer"),
+        tf.keras.layers.Dense(1, activation='sigmoid', name="dense_layer")
     ])
     
-    # Memuat bobot murni dari format array Pickle
-    with open('model_weights.pickle', 'rb') as f:
-        weights = pickle.load(f)
-    model.set_weights(weights)
+    # Memuat bobot murni lewat framework biner resmi
+    model.load_weights('model_lstm_fixed.weights.h5')
         
     # Memuat tokenizer
     with open('tokenizer.pickle', 'rb') as handle:
