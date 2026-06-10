@@ -7,17 +7,24 @@ import numpy as np
 # 1. Konfigurasi Halaman Utama
 st.set_page_config(page_title="Sentimen Analisis LSTM Streamlit", page_icon="📊", layout="wide")
 
-# 2. Fungsi Load Resource dengan Fallback Format
+# 2. Fungsi Load Resource dengan Rekonstruksi Model (Anti-Error Versi)
 @st.cache_resource
 def load_resources():
-    # Coba load format .keras terlebih dahulu, jika gagal pakai format lama .h5
-    try:
-        model = tf.keras.models.load_model('model_lstm.keras')
-    except Exception:
-        model = tf.keras.models.load_model('model_lstm.h5')
+    # Bangun ulang arsitektur yang sama persis dengan saat training
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Embedding(input_dim=5000, output_dim=32, input_length=50),
+        tf.keras.layers.LSTM(64),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(1, activation='sigmoid')
+    ])
+    
+    # Muat bobot model
+    model.load_weights('model_lstm.weights.h5')
         
+    # Muat tokenizer
     with open('tokenizer.pickle', 'rb') as handle:
         tokenizer = pickle.load(handle)
+        
     return model, tokenizer
 
 # 3. Komponen UI: Sidebar (Informasi Sistem)
@@ -72,4 +79,3 @@ try:
 
 except Exception as e:
     st.error(f"Gagal memuat model atau tokenizer: {e}")
-    st.info("Solusi: Pastikan file 'model_lstm.keras'/'model_lstm.h5' dan 'tokenizer.pickle' sudah di-push di root GitHub.")
