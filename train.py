@@ -43,9 +43,17 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 model.fit(X_train, y_train, epochs=10, validation_split=0.1, verbose=1)
 
 # 7. SIMPAN BOBOT DAN TOKENIZER (Solusi Anti-Error Versi)
-model.save_weights('model_lstm.weights.h5')
+# --- GANTI LANGKAH 7 PADA TRAIN.PY DENGAN KODE INI ---
 
+# Ambil bobot model dalam bentuk NumPy arrays
+weights = model.get_weights()
+
+# Simpan bobot menggunakan pickle (bukan format .h5/.keras)
+with open('model_weights.pickle', 'wb') as f:
+    pickle.dump(weights, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+# Simpan tokenizer (tetap sama)
 with open('tokenizer.pickle', 'wb') as handle:
     pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-print("Sukses: File 'model_lstm_weights.h5' dan 'tokenizer.pickle' telah diperbarui di lokal!")
+print("Sukses: File 'model_weights.pickle' dan 'tokenizer.pickle' telah diperbarui!")
