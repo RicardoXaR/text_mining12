@@ -2,60 +2,62 @@ import streamlit as st
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
-import pandas as pd
+import numpy as np
 
-# Konfigurasi halaman utama
-st.set_page_config(page_title="Sentimen Analisis LSTM", page_icon="📊", layout="wide")
+# 1. Konfigurasi Halaman Utama
+st.set_page_config(page_title="Sentimen Analisis LSTM Streamlit", page_icon="📊", layout="wide")
 
-# Fungsi pemuatan model dalam cache
+# 2. Fungsi Load Resource dengan Fallback Format
 @st.cache_resource
-def load_model_data():
-    # Di dalam fungsi load_model_data()
-    model = tf.keras.models.load_model('model_lstm.keras')
+def load_resources():
+    # Coba load format .keras terlebih dahulu, jika gagal pakai format lama .h5
+    try:
+        model = tf.keras.models.load_model('model_lstm.keras')
+    except Exception:
+        model = tf.keras.models.load_model('model_lstm.h5')
+        
     with open('tokenizer.pickle', 'rb') as handle:
         tokenizer = pickle.load(handle)
     return model, tokenizer
 
-try:
-    model, tokenizer = load_model_data()
-    model_loaded = True
-except Exception as e:
-    st.error(f"Gagal memuat model atau tokenizer: {e}. Pastikan file model_lstm.h5 dan tokenizer.pickle berada di direktori yang sama.")
-    model_loaded = False
-
-# Tata letak Sidebar
+# 3. Komponen UI: Sidebar (Informasi Sistem)
 with st.sidebar:
     st.header("Informasi Sistem")
-    st.write("**Arsitektur:** Long Short-Term Memory (LSTM)")
-    st.write("**Tugas:** Text Mining")
+    st.markdown("""
+    * **Arsitektur:** Long Short-Term Memory (LSTM)
+    * **Tugas:** Text Mining
+    """)
     st.divider()
-    st.write("Masukkan teks pada area utama untuk melihat prediksi sentimen biner (0: Negatif, 1: Positif).")
+    st.caption("Masukkan teks pada area utama untuk melihat prediksi sentimen biner (0: Negatif, 1: Positif).")
 
-# Tata letak Utama
+# 4. Komponen UI: Panel Utama
 st.title("Aplikasi Analisis Sentimen")
-st.markdown("Deteksi sentimen teks ulasan menggunakan *Deep Learning*.")
+st.markdown("### Deteksi sentimen teks ulasan menggunakan Deep Learning")
 
-if model_loaded:
-    # Form input untuk efisiensi eksekusi
-    with st.form(key='nlp_form'):
-        user_input = st.text_area("Masukkan Teks Ulasan:", placeholder="Contoh: Makanannya enak dan pelayanannya cepat...", height=150)
+try:
+    model, tokenizer = load_resources()
+    
+    # Form Input Teks
+    with st.form(key='sentiment_form'):
+        user_input = st.text_area("Masukkan Teks Ulasan:", placeholder="Ketik atau paste ulasan Anda di sini...", height=150)
         submit_button = st.form_submit_button(label='Analisis Sentimen')
-
-    # Logika Prediksi
+        
+    # Logika Pemrosesan Model
     if submit_button:
-        if user_input.strip() == "":
-            st.warning("Teks ulasan tidak boleh kosong.")
+        if not user_input.strip():
+            st.warning("Teks ulasan kosong, masukkan teks terlebih dahulu!")
         else:
-            # Pra-pemrosesan data
-            max_length = 50 
+            # Preprocessing teks input
+            max_length = 50
             sequence = tokenizer.texts_to_sequences([user_input])
             padded_sequence = pad_sequences(sequence, maxlen=max_length, padding='post', truncating='post')
             
-            # Eksekusi model
+            # Prediksi nilai Sigmoid
             prediction = model.predict(padded_sequence)
-            score = prediction[0][0]
+            score = float(prediction[0][0])
             
-            st.markdown("### Hasil Analisis")
+            # Output Layout Hasil Analisis
+            st.markdown("#### Hasil Analisis")
             col1, col2 = st.columns(2)
             
             with col1:
@@ -66,4 +68,8 @@ if model_loaded:
                     
             with col2:
                 st.metric(label="Skor Probabilitas (Sigmoid)", value=f"{score:.4f}")
-                st.progress(float(score), text="Tingkat Keyakinan Positif")
+                st.progress(score, text=f"Tingkat Keyakinan: {score * 100:.2f}%")
+
+except Exception as e:
+    st.error(f"Gagal memuat model atau tokenizer: {e}")
+    st.info("Solusi: Pastikan file 'model_lstm.keras'/'model_lstm.h5' dan 'tokenizer.pickle' sudah di-push di root GitHub.")
